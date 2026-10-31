@@ -23,6 +23,8 @@ never leaves their machine.
 | apply to these, prepare applications | `.claude/skills/campaign-apply/SKILL.md` |
 | who should I reach out to, follow-ups, outreach today | `.claude/skills/campaign-outreach/SKILL.md` |
 | weekly review, how is it going, what should change | `.claude/skills/campaign-weekly-review/SKILL.md` |
+| tailor my resume, resume for this job | `.claude/skills/campaign-resume/SKILL.md` |
+| I have an interview, prep me, mock interview, story bank, how did it go, thank-you | `.claude/skills/campaign-interview-prep/SKILL.md` |
 | write a post / hooks | `.claude/skills/li-post/SKILL.md` |
 | plan my week of posts | `.claude/skills/li-plan/SKILL.md` |
 | carousel, document post | `.claude/skills/li-carousel/SKILL.md` |

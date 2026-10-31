@@ -18,7 +18,7 @@ each sheet for the last seven days of `Event History`).
    where they are behind and the likely reason, from the data, not a guess.
 3. **Stale rows.** Leads older than 10 days still `Lead saved - not applied`,
    applications with no update in 14 days, follow-ups overdue, `Ready` posts not
-   posted. Suggest the action for each (apply, close, nudge, drop).
+   posted, interviews `Done` with no outcome after 7 days. Suggest the action for each (apply, close, nudge, drop).
 4. **Review sheet.** List open rows; resolve any the week's evidence settles, with the
    evidence, in one write.
 5. **Content** (if on): which posts did best and worst on 7-day numbers, using li-audit's

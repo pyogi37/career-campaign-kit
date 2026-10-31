@@ -13,6 +13,8 @@ that. You pick what you want:
 - **outreach**: who to contact, the messages, the follow-ups, the replies
 - **content**: LinkedIn posts planned and drafted in your voice
 - **engagement**: comments on other people's posts, replies under yours
+- **resume**: one master resume, tailored versions per role as PDFs, no invented facts
+- **interview**: company research, likely questions, a story bank, mock rounds, debriefs
 
 ## Start
 
@@ -35,8 +37,8 @@ Start with step 1 of START.md.
 ```
 
 Setup takes about 20 to 40 minutes of back and forth. After that, say things like
-"daily leads", "apply to these", "outreach today", "write a post about ...", or
-"weekly review".
+"daily leads", "apply to these", "tailor my resume for JOB-0004", "I have an interview
+with X on Tuesday", "outreach today", "write a post about ...", or "weekly review".
 
 ## Where your data lives
 
@@ -54,9 +56,11 @@ open, takes a backup before every change, and checks every cell after.
 |---|---|
 | `AGENTS.md` | The agent's operating manual and hard rules (Codex reads it directly; `CLAUDE.md` points to it) |
 | `START.md` | The first-run interview and setup |
-| `.claude/skills/campaign-*` | Routines: daily leads, application batch, outreach, weekly review |
+| `.claude/skills/campaign-*` | Routines: daily leads, application batch, outreach, weekly review, resume tailoring, interview prep |
 | `.claude/skills/li-*` | LinkedIn writing skills: posts, comments, DMs, replies, carousels, profile, audit, humanizer |
 | `tools/workbook.py` | The only way the workbook is changed: lock, backup, staged save, cell-by-cell check |
+| `tools/resume.py` | Checks a tailored resume against your master (no new numbers, nothing off limits) and renders it to PDF with Chrome or Edge |
 | `templates/voice.md` | Shape of the voice profile the agent writes for you |
 
-Check the workbook tool on your machine with `python tools/test_workbook.py`.
+Check the tools on your machine with `python tools/test_workbook.py` and
+`python tools/test_resume.py`.

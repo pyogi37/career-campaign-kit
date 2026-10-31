@@ -1,6 +1,6 @@
 """The campaign workbook: one .xlsx in workspace/ that is the source of truth.
 
-  python tools/workbook.py init jobs,outreach,content,engagement   # create, or add sheets for new modules
+  python tools/workbook.py init jobs,outreach,content,engagement,interview,resume   # create, or add sheets for new modules
   python tools/workbook.py write spec.json                         # the only way agents change it
   python tools/workbook.py show Overview                           # counts at a glance
   python tools/workbook.py show Applications [--where "State=Applied"] [--limit 50]
@@ -42,6 +42,10 @@ SHEETS = {
         ["Idea", "Planned", "Drafting", "Ready", "Posted", "Dropped"],
         ["Title", "Status", "Planned date", "Posted date", "URL", "Visual", "First line",
          "Impressions 7d", "Reactions 7d", "Comments 7d", "Profile views 7d", "Notes"]),
+    "Interviews": ("interview", "INT", "Status",
+        ["Scheduled", "Prep ready", "Done", "Next round", "Rejected", "Offer", "Cancelled"],
+        ["Linked record", "Company", "Role", "Round", "Date", "With", "Format", "Status", "Prep file",
+         "Thank-you sent", "Outcome", "Notes"]),
     "Engagement": ("engagement", "ENG", None, None,
         ["Date", "Person", "Company", "Type", "Post URL", "Note"]),
     "Context": ("core", "CTX", None, None,
@@ -53,7 +57,8 @@ DATE_COLS = {"Captured", "Applied date", "Last update", "Date", "Last sent", "Ne
              "Posted date", "Date recorded", "Opened"}
 # A status change in these states is an outcome; it must arrive with an Event History row as evidence.
 NEEDS_EVENT = {"Applied", "Interviewing", "Offer", "Accepted", "Declined", "Rejected",
-               "Invite sent", "Message sent", "Replied", "Call booked", "Posted"}
+               "Invite sent", "Message sent", "Replied", "Call booked", "Posted", "Done", "Next round"}
+MODULES = {"jobs", "outreach", "content", "engagement", "interview", "resume"}  # resume adds files, not a sheet
 TRACKING = re.compile(r"^(utm_.*|gh_src|ref|refid|trk|trackingid|source|src|lipi|fbclid|gclid)$", re.I)
 HEAD = Font(bold=True, color="FFFFFF")
 FILL = PatternFill("solid", fgColor="1F3A5F")
@@ -174,9 +179,8 @@ def transaction(label, change):
 
 def cmd_init(modules):
     wanted = set(modules) | {"core"}
-    unknown = wanted - {m for m, *_ in SHEETS.values()}
-    if unknown:
-        sys.exit(f"unknown modules {unknown}; choose from jobs, outreach, content, engagement")
+    if unknown := wanted - MODULES - {"core"}:
+        sys.exit(f"unknown modules {unknown}; choose from {', '.join(sorted(MODULES))}")
 
     def change(wb):
         added = [n for n, (m, *_) in SHEETS.items() if m in wanted and n not in wb.sheetnames]

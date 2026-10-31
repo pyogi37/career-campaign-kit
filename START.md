@@ -44,6 +44,8 @@ Show this menu and let them pick any mix. Nothing is on by default.
 | `outreach` | Picks people worth reaching (hiring managers, recruiters, alumni, or clients and prospects), drafts the invite and follow-ups, tracks who replied. | Outreach |
 | `content` | Plans and drafts LinkedIn posts in their voice, tracks what was posted and how it did. | Content |
 | `engagement` | Drafts comments on other people's posts and replies under their own. | Engagement |
+| `resume` | Builds one master resume from every version they have, then tailored versions per role that can only use confirmed facts, as PDFs. | (files) |
+| `interview` | Company research and likely questions before each round, a story bank of their real examples, mock rounds, debriefs and thank-you notes. | Interviews |
 
 `Event History`, `Context` and `Review` come with every setup. Ask what the campaign is
 for in one sentence (a new job, a switch of field, clients for a business) and save it
@@ -95,6 +97,14 @@ often they will really post; topics they know cold; topics they will not touch.
 **engagement:** whose posts they want to be seen on (people, companies, communities);
 how many comments a day they will really do.
 
+**resume:** which resume versions they use and for what; page size (A4 or Letter);
+whether their current employer's name may appear on a resume even if it is off limits
+in posts.
+
+**interview:** any interviews already booked or done (company, round, date, outcome);
+the kinds of rounds their field usually has (case study, technical test, exams,
+portfolio review).
+
 ## 5. Read it back
 
 Show the full fact list, grouped by category, each marked `confirmed` or
@@ -115,6 +125,11 @@ becomes a `Review` row. Get a yes before step 6.
 5. If `content` is on, run li-plan to write `workspace/plan.md`'s content section, and
    offer li-profile to score their profile.
 6. Save their resumes in `workspace/resume/`.
+7. If `resume` is on, build `workspace/resume/master.json` (campaign-resume, "Once: the
+   master") and make the first tailored version for their main target role.
+8. If `interview` is on, record any booked or past rounds in `Interviews`, and start
+   `workspace/interviews/story-bank.md` with three stories (campaign-interview-prep).
+   If a round is coming up, prepare its company file first.
 
 ## 7. Design their campaign
 

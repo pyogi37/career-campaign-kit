@@ -48,7 +48,10 @@ assert "another writer" in write({"add": {"Applications": [{"Company": "B", "Rol
 os.remove(os.path.join(WS, ".write.lock"))
 assert len(show("Applications")) == 2
 
-run("init", "jobs,outreach,content,engagement")
+run("init", "jobs,outreach,content,engagement,interview,resume")
 assert show("Applications")[0]["State"] == "Applied"  # adding modules kept existing data
+write({"add": {"Interviews": [{"Linked record": "JOB-0001", "Company": "Acme Re", "Round": "1", "Status": "Scheduled"}]}})
+assert "is an outcome" in write({"update": {"Interviews": {"INT-0001": {"Status": "Done"}}}}, ok=False)
+assert "unknown modules" in run("init", "astrology", ok=False)
 assert len(os.listdir(os.path.join(WS, "backups"))) >= 5
 print("all workbook checks passed")

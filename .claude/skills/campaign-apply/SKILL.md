@@ -18,7 +18,8 @@ Needs the `jobs` module. Read `AGENTS.md` first.
    application to the same role, and any conversation with that company. Closed or
    already applied: say so, update the row (`Closed`, or leave it), and move on.
 3. **Prepare each one.**
-   - Pick the resume from `workspace/resume/` that fits best and say why.
+   - Pick the resume from `workspace/resume/` that fits best and say why. If the
+     `resume` module is on and no variant fits, make one with campaign-resume first.
    - Draft any cover note or form answers from `Context` and their resume only. Facts
      not on file (notice period, pay, visa, start date) are asked, not guessed.
    - A cover note passes the four writing checks in `AGENTS.md`.
