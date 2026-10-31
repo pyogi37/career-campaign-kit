@@ -26,7 +26,11 @@ Needs the `jobs` module. Read `AGENTS.md` first.
    (the canonical posting, not a search page), Location, Source (board name + URL),
    Captured, Fit, Fit notes, Next action. The tool skips exact URL repeats and opens a
    Review row for same-company same-role pairs; mention both in the summary.
-   Label the spec `daily-leads-YYYY-MM-DD`.
+   Label the spec `daily-leads-YYYY-MM-DD` and save it as
+   `workspace/specs/daily-leads-YYYY-MM-DD.json` before running the write.
+   If the write is refused (workbook open, lock held), leave the spec there and say so.
+   At the start of every run, first retry any earlier daily-leads spec that was never
+   written (its leads are not in `Applications`); the tool skips ones already saved.
 6. **Report** in a few lines: sources searched and any that failed, new leads with fit
    and one-line why, repeats skipped, Review rows opened, and the three best leads to
    apply to first. Ask whether to prepare an application batch (campaign-apply).

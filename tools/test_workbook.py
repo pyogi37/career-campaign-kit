@@ -54,4 +54,40 @@ write({"add": {"Interviews": [{"Linked record": "JOB-0001", "Company": "Acme Re"
 assert "is an outcome" in write({"update": {"Interviews": {"INT-0001": {"Status": "Done"}}}}, ok=False)
 assert "unknown modules" in run("init", "astrology", ok=False)
 assert len(os.listdir(os.path.join(WS, "backups"))) >= 5
+# outcomes need evidence on new rows too, and events must point at real records
+assert "cannot start as 'Applied'" in write({"add": {"Applications": [{"Company": "D", "Role": "E", "State": "Applied"}]}}, ok=False)
+assert "does not exist" in write({"add": {"Event History": [{"Record ID": "JOB-0040", "Event type": "Applied"}]}}, ok=False)
+assert "real date" in write({"update": {"Applications": {"JOB-0002": {"Applied date": "2026-13-45"}}}}, ok=False)
+
+# hash-routed career sites: different jobs stay different
+write({"add": {"Applications": [{"Company": "F", "Role": "G", "Job URL": "https://f.com/careers#/jobs/1"},
+                                {"Company": "F", "Role": "H", "Job URL": "https://f.com/careers#/jobs/2"}]}})
+assert sum(r["Company"] == "F" for r in show("Applications")) == 2
+
+# a formatted blank block in Excel does not push new rows down
+import openpyxl
+live = os.path.join(WS, "campaign.xlsx")
+wb = openpyxl.load_workbook(live)
+for r in range(10, 40):
+    wb["Applications"].cell(r, 2).font = openpyxl.styles.Font(bold=True)
+wb.save(live)
+write({"add": {"Applications": [{"Company": "I", "Role": "J"}]}})
+ws = openpyxl.load_workbook(live)["Applications"]
+assert [ws.cell(r, 2).value for r in range(2, 7)] == ["Acme Re", "Acme Re", "F", "F", "I"]
+
+# refused writes leave no backup; Excel and LibreOffice locks stop writes
+backups = len(os.listdir(os.path.join(WS, "backups")))
+for name in ("~$campaign.xlsx", ".~lock.campaign.xlsx#"):
+    open(os.path.join(WS, name), "w").close()
+    assert "open in Excel or LibreOffice" in write({"add": {"Applications": [{"Company": "K", "Role": "L"}]}}, ok=False)
+    os.remove(os.path.join(WS, name))
+assert len(os.listdir(os.path.join(WS, "backups"))) == backups
+
+# content openpyxl cannot read (a drawing someone added in Excel) blocks the write
+import zipfile
+with zipfile.ZipFile(live, "a") as z:
+    z.writestr("xl/drawings/drawing1.xml", "<xdr:wsDr/>")
+before = open(live, "rb").read()
+assert "drop Excel content" in write({"add": {"Applications": [{"Company": "M", "Role": "N"}]}}, ok=False)
+assert open(live, "rb").read() == before
 print("all workbook checks passed")

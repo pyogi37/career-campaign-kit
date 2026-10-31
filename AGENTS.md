@@ -59,7 +59,9 @@ is off, say so and offer to turn it on (START.md, step 2).
   silent choice.
 - **Their off-limits list is absolute.** `Context` rows with Category `Off limits`
   (employer names, clients, deal values, colleagues, anything they named) never appear
-  in a post, comment, DM or visual.
+  in a post, comment, DM or visual. One item per row, with `Value` set to the exact text
+  to block (`Zeta Insurance`, not `Clients: Zeta, Acme`); the resume check matches it as
+  written.
 - **A draft is not a send; a click is not an application.** Record what happened, with
   evidence, only after it happened.
 - **One question at a time in conversations with other people.** A thread carries at
@@ -68,7 +70,9 @@ is off, say so and offer to turn it on (START.md, step 2).
 ## The workbook
 
 `workspace/campaign.xlsx` is the single source of truth. The person likes it: they can
-open it in Excel or Google Sheets, filter, and see the whole campaign.
+open it in Excel or LibreOffice, filter, and see the whole campaign. Google Sheets edits
+a separate copy, so it is for viewing only unless they download it back as .xlsx over
+this file.
 
 - Change it only with `python tools/workbook.py write spec.json` (format in the tool's
   header). The tool takes the lock, makes a dated backup, stages the save, diffs every
@@ -76,6 +80,12 @@ open it in Excel or Google Sheets, filter, and see the whole campaign.
   openpyxl code, pandas or a spreadsheet app automation.
 - If the tool says the file is open in Excel or another writer holds the lock, stop and
   tell them. Do not delete a lock you did not create.
+- New rows start as leads, drafts or ideas. To record something that already happened
+  (an old application, a message sent last week), add the row, then a second write with
+  the `Event History` row and the status update. The tool refuses a new row that starts
+  in an outcome state, and an event whose Record ID does not exist.
+- Save every spec you write in `workspace/specs/` before running it. If the write is
+  refused (file open, lock held), the spec is still there to retry next time.
 - `Event History` is append-only. Every outcome (applied, interview, offer, rejection,
   message sent, reply, post published) is an event with its evidence, and the tool
   refuses a status change that arrives without one.

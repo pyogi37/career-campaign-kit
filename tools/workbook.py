@@ -15,10 +15,10 @@ spec.json = {
 Every write: exclusive lock, dated backup, save to a staging file, reopen and diff every cell,
 check nobody changed the live file meanwhile, then replace it atomically.
 """
-import datetime, hashlib, json, os, re, shutil, sys, uuid
+import datetime, hashlib, json, os, re, shutil, sys, uuid, zipfile
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -73,7 +73,16 @@ def canon_url(u):
         return ""
     p = urlsplit(u.strip())
     q = urlencode([(k, v) for k, v in parse_qsl(p.query) if not TRACKING.match(k)])
-    return urlunsplit((p.scheme.lower(), p.netloc.lower().removeprefix("www."), p.path.rstrip("/"), q, ""))
+    route = p.fragment if p.fragment.startswith(("/", "!")) else ""  # hash-routed career sites put the job here
+    return urlunsplit((p.scheme.lower(), p.netloc.lower().removeprefix("www."), p.path.rstrip("/"), q, route))
+
+
+def valid_date(value):
+    try:
+        datetime.datetime.strptime(str(value), "%Y-%m-%d %H:%M" if len(str(value)) > 10 else "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
 
 def headers(ws):
@@ -86,7 +95,7 @@ def rows(ws):
 
 
 def make_sheet(wb, name):
-    _, prefix, status_col, statuses, cols = SHEETS[name]
+    _, _, status_col, statuses, cols = SHEETS[name]
     ws = wb.create_sheet(name)
     ws.append(["ID"] + cols)
     for i, c in enumerate(ws[1], 1):
@@ -129,6 +138,11 @@ def snapshot(path):
             for ws in wb.worksheets if ws.title != "Overview"}
 
 
+def parts(path):
+    with zipfile.ZipFile(path) as z:
+        return {n for n in z.namelist() if not n.startswith(("docProps/", "xl/calcChain", "xl/sharedStrings"))}  # storage, not content
+
+
 def sha(p):
     return hashlib.sha256(open(p, "rb").read()).hexdigest()
 
@@ -136,8 +150,8 @@ def sha(p):
 def transaction(label, change):
     """Run change(wb) -> (intended {(sheet, cell)}, report) under the shared write protocol."""
     os.makedirs(os.path.join(WS_DIR, "backups"), exist_ok=True)
-    if os.path.exists(os.path.join(WS_DIR, "~$campaign.xlsx")):
-        sys.exit("campaign.xlsx is open in Excel; close it and retry. Nothing written.")
+    if any(os.path.exists(os.path.join(WS_DIR, n)) for n in ("~$campaign.xlsx", ".~lock.campaign.xlsx#")):
+        sys.exit("campaign.xlsx is open in Excel or LibreOffice; close it and retry. Nothing written.")
     try:
         fd = os.open(LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
@@ -148,8 +162,6 @@ def transaction(label, change):
         os.write(fd, f"{label} {run} {datetime.datetime.now().isoformat()}\n".encode())
         exists = os.path.exists(LIVE)
         base = sha(LIVE) if exists else None
-        if exists:
-            shutil.copy2(LIVE, os.path.join(WS_DIR, "backups", f"campaign_{today()}_{label}_{run}.xlsx"))
         before = snapshot(LIVE) if exists else {}
         wb = openpyxl.load_workbook(LIVE) if exists else openpyxl.Workbook()
         if not exists:
@@ -161,6 +173,9 @@ def transaction(label, change):
                 ws.auto_filter.ref = ws.dimensions
         wb.save(stage)
 
+        if exists and (lost := parts(LIVE) - parts(stage)):
+            sys.exit(f"saving would drop Excel content this tool cannot read ({sorted(lost)[:5]}); nothing written. "
+                     "Remove shapes, slicers or similar from campaign.xlsx, or ask for help.")
         after = snapshot(stage)
         for sh in before:
             assert sh in after, f"sheet {sh} disappeared"
@@ -168,6 +183,8 @@ def transaction(label, change):
             assert not diff - intended, f"unintended changes: {sorted(diff - intended)[:10]}"
         if exists and sha(LIVE) != base:
             sys.exit("campaign.xlsx changed while this write ran; nothing replaced. Re-read and retry.")
+        if exists:
+            shutil.copy2(LIVE, os.path.join(WS_DIR, "backups", f"campaign_{today()}_{label}_{run}.xlsx"))
         os.replace(stage, LIVE)
         print(json.dumps(report, indent=1, ensure_ascii=False))
     finally:
@@ -203,8 +220,8 @@ def cmd_write(spec_path):
             h = headers(ws)
             if col not in h:
                 raise SystemExit(f"{ws.title} has no column {col!r}; columns are {h}")
-            if col in DATE_COLS and value and not re.fullmatch(r"\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?", str(value)):
-                raise SystemExit(f"{ws.title}.{col} must be YYYY-MM-DD, got {value!r}")
+            if col in DATE_COLS and value and not valid_date(value):
+                raise SystemExit(f"{ws.title}.{col} must be a real date as YYYY-MM-DD (optionally HH:MM), got {value!r}")
             _, _, status_col, statuses, _ = SHEETS.get(ws.title, (None,) * 5)
             if col == status_col and value not in statuses:
                 raise SystemExit(f"{ws.title}.{col} must be one of {statuses}, got {value!r}")
@@ -220,7 +237,7 @@ def cmd_write(spec_path):
         def add_row(name, values):
             ws, prefix = wb[name], SHEETS[name][1]
             rid = next_id(ws, prefix)
-            r = ws.max_row + 1
+            r = max((c.row for c in ws["A"] if c.value is not None), default=1) + 1  # formatted blank rows don't count
             put(ws, r, "ID", rid)
             for k, v in values.items():
                 put(ws, r, k, v)
@@ -232,6 +249,10 @@ def cmd_write(spec_path):
             for item in items:
                 item = dict(item)
                 item.pop("ID", None)
+                status_col = SHEETS[name][2]
+                if item.get(status_col) in NEEDS_EVENT:
+                    raise SystemExit(f"new {name} rows cannot start as {item[status_col]!r}: add the row first, "
+                                     "then a second write with the Event History row and the status update")
                 if name == "Applications":
                     item.setdefault("State", "Lead saved - not applied")
                     item.setdefault("Captured", today())
@@ -244,7 +265,11 @@ def cmd_write(spec_path):
                             and str(e.get("Role", "")).strip().lower() == str(item.get("Role", "")).strip().lower()]
                 elif name == "Event History":
                     item.setdefault("Date", today())
-                    new_events.append(item.get("Record ID"))
+                    if ref := item.get("Record ID"):
+                        sheet = next((n for n, d in SHEETS.items() if str(ref).startswith(d[1] + "-")), None)
+                        if not sheet or sheet not in wb.sheetnames or ref not in {str(r["ID"]) for r in rows(wb[sheet])}:
+                            raise SystemExit(f"Event History Record ID {ref!r} does not exist in the workbook")
+                    new_events.append(ref)
                 rid = add_row(name, item)
                 report["added"].append(f"{name} {rid}")
                 if name == "Applications" and same:

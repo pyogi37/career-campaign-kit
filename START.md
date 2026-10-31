@@ -73,7 +73,8 @@ Ask only what the files did not answer, for the modules they chose.
 **Always:** name, where they live, their field in their own words, the one-line story
 of their career, what they are best at, and what must never be mentioned in public
 (current employer details, clients, numbers, people). Off-limits answers become
-`Context` rows with Category `Off limits`.
+`Context` rows with Category `Off limits`, one item per row, `Value` set to the exact
+name or text to block.
 
 **jobs:** target titles and the close variants they would also take; seniority; the
 industries and kinds of employer they want and do not want; locations, remote,
@@ -117,8 +118,9 @@ becomes a `Review` row. Get a yes before step 6.
 2. Write all `Context` rows in one spec (`label: setup-context`).
 3. If they gave an existing tracker, map its columns to the workbook's, show the
    mapping, and ask about any column you are unsure of. Import with `Source` set to the
-   file name. Outcomes they listed (applied, interviewed) need one `Event History` row
-   each, dated as their tracker says, `Source` set to the file name.
+   file name. Rows go in as leads first. Then, for outcomes they listed (applied,
+   interviewed), a second write: one `Event History` row each, dated as their tracker
+   says, `Source` set to the file name, plus the status update for that row.
 4. If `content`, `engagement` or `outreach` is on, write `workspace/voice.md` from
    `templates/voice.md`, filled from their own writing and answers. Mark anything you
    inferred `(confirm)` and show it.
@@ -161,7 +163,7 @@ Offer to run the first routine now (usually daily leads). Then end with:
 
 - What exists now: the workbook (with sheet names), voice.md, plan.md.
 - The phrases that run each routine (the table in `AGENTS.md`, only for their modules).
-- That they can open `workspace/campaign.xlsx` any time, edit it by hand, and that the
-  agent re-reads it before every change. Ask them to close it in Excel before asking
-  the agent to update it.
+- That they can open `workspace/campaign.xlsx` any time in Excel or LibreOffice, edit it
+  by hand, and that the agent re-reads it before every change. Ask them to close it
+  before asking the agent to update it. Google Sheets is for viewing a copy only.
 - That nothing is ever sent, posted or applied without their yes.

@@ -18,7 +18,7 @@ variant.json (one per role family or per job):
 
 Rules the check enforces: every entry and bullet exists in master; a reworded bullet uses only numbers
 in its master bullet; headline and summary use only numbers found somewhere in master; no Off limits
-value from the workbook's Context sheet appears, unless the owner said yes to it for resumes and it is
+value from the workbook's Context sheet (one item per row) appears, unless the owner said yes to it for resumes and it is
 listed in the variant's "allow": ["Acme Re"] (an employer name they hide in posts but not on a resume).
 """
 import html, json, os, re, shutil, subprocess, sys
@@ -48,7 +48,7 @@ def off_limits():
     for r in ws.iter_rows(min_row=2, values_only=True):
         row = dict(zip(h, r))
         if row.get("Category") == "Off limits" and row.get("Status") != "superseded" and row.get("Value"):
-            out += [v.strip() for v in str(row["Value"]).split(";") if len(v.strip()) > 2]
+            out.append(str(row["Value"]).strip())  # one item per row, matched as written
     return out
 
 
@@ -56,7 +56,8 @@ def build(variant_path):
     """Resolve a variant against master. Returns (resume dict, problems)."""
     v = json.load(open(variant_path, encoding="utf-8"))
     m = json.load(open(os.path.join(WS_DIR, "resume", "master.json"), encoding="utf-8"))
-    problems, all_nums = [], nums(json.dumps(m, ensure_ascii=False))
+    # ids (e1.2) and source notes (resume v3.pdf, user said 2026-10-31) are not facts
+    problems, all_nums = [], nums(re.sub(r'"(id|source)": "[^"]*"', "", json.dumps(m, ensure_ascii=False)))
     out = {"name": m["name"], "contact": m.get("contact", []), "page": v.get("page", "A4"),
            "headline": v.get("headline", ""), "summary": v.get("summary", "")}
     for field in ("headline", "summary"):
@@ -131,6 +132,8 @@ def render(variant_path):
         sys.exit("not rendered:\n- " + "\n- ".join(problems))
     base = os.path.splitext(os.path.abspath(variant_path))[0]
     open(base + ".html", "w", encoding="utf-8").write(to_html(r))
+    if os.path.exists(base + ".pdf"):
+        os.remove(base + ".pdf")  # a failed print must not leave the old PDF looking new
     exe = next((b for b in BROWSERS if os.path.exists(b)), None) or next(
         (shutil.which(n) for n in ("msedge", "google-chrome", "chromium", "chromium-browser", "chrome") if shutil.which(n)), None)
     if not exe:

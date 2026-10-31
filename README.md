@@ -46,9 +46,11 @@ Everything about you is in `workspace/`: the workbook (`campaign.xlsx`), your vo
 profile, plan, resumes and drafts. That folder is ignored by git, so it stays on your
 machine. `git pull` updates the kit without touching it. Do not push it anywhere.
 
-You can open `workspace/campaign.xlsx` in Excel or Google Sheets any time and edit it.
+You can open `workspace/campaign.xlsx` in Excel or LibreOffice any time and edit it.
 Close it before asking the agent to update it; the agent refuses to write while it is
-open, takes a backup before every change, and checks every cell after.
+open, takes a backup before every change, and checks every cell after. Google Sheets
+works for viewing, but it edits a copy: download it back as .xlsx over the same file if
+you change anything there.
 
 ## What is in the repo
 
