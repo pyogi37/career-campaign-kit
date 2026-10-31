@@ -1,0 +1,4 @@
+# Everything personal lives here and never leaves the owner's machine
+workspace/
+__pycache__/
+~$*.xlsx
